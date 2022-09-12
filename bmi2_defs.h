@@ -2491,6 +2491,9 @@ struct bmi2_map_int
 /*!  @name Structure to define BMI2 sensor configurations */
 struct bmi2_dev
 {
+    /*! I2C Addr */
+    uint8_t dev_id;
+
     /*! Chip id of BMI2 */
     uint8_t chip_id;
 

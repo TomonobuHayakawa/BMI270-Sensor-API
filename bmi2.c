@@ -1966,7 +1966,7 @@ int8_t bmi2_get_regs(uint8_t reg_addr, uint8_t *data, uint16_t len, struct bmi2_
             reg_addr = (reg_addr | BMI2_SPI_RD_MASK);
         }
 
-        dev->intf_rslt = dev->read(reg_addr, temp_buf, (len + dev->dummy_byte), dev->intf_ptr);
+        dev->intf_rslt = dev->read(dev->dev_id, reg_addr, temp_buf, (len + dev->dummy_byte));
 
         if (dev->aps_status == BMI2_ENABLE)
         {
@@ -2017,7 +2017,7 @@ int8_t bmi2_set_regs(uint8_t reg_addr, const uint8_t *data, uint16_t len, struct
             reg_addr = (reg_addr & BMI2_SPI_WR_MASK);
         }
 
-        dev->intf_rslt = dev->write(reg_addr, data, len, dev->intf_ptr);
+        dev->intf_rslt = dev->write(dev->dev_id, reg_addr, data, len);
 
         /* Delay for Low power mode of the sensor is 450 us */
         if (dev->aps_status == BMI2_ENABLE)
@@ -2948,7 +2948,7 @@ int8_t bmi2_read_fifo_data(struct bmi2_fifo_frame *fifo, struct bmi2_dev *dev)
         }
 
         /* Read FIFO data */
-        dev->intf_rslt = dev->read(addr, fifo->data, (uint32_t)fifo->length, dev->intf_ptr);
+        dev->intf_rslt = dev->read(dev->dev_id, addr, fifo->data, (uint32_t)fifo->length);
 
         /* Provide delay based on advanced power saving mode status */
         if (dev->aps_status == BMI2_ENABLE)

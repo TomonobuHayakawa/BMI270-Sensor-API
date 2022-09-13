@@ -1,3 +1,16 @@
+# オリジナルからの変更分
+
+Arduinoで使うために、Bocshさんのサンプルスケッチをこちらに移植。
+APIの不整合を修正し、表示をわかりやすい値に変更しました。
+
+https://gist.github.com/BoschSensortec/53a27010ff5af5350b3641ee46d34762
+
+他は、極力変更しないようにしています。
+そのままZipをライブラリとしてインストールすればこちらのAPIを呼べます。
+
+---------------
+以下、オリジナルReadme
+---------------
 BMI270 Sensor API
 
 > This package contains the sensor APIs for the BMI270 sensor

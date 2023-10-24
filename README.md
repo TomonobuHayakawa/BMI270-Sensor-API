@@ -1,15 +1,15 @@
-# オリジナルからの変更分
+# �I���W�i������̕ύX��
 
-Arduinoで使うために、Bocshさんのサンプルスケッチをこちらに移植。
-APIの不整合を修正し、表示をわかりやすい値に変更しました。
+Arduino�Ŏg�����߂ɁABocsh����̃T���v���X�P�b�`��������ɈڐA�B
+API�̕s�������C�����A�\�����킩��₷���l�ɕύX���܂����B
 
 https://gist.github.com/BoschSensortec/53a27010ff5af5350b3641ee46d34762
 
-他は、極力変更しないようにしています。
-そのままZipをライブラリとしてインストールすればこちらのAPIを呼べます。
+���́A�ɗ͕ύX���Ȃ��悤�ɂ��Ă��܂��B
+���̂܂�Zip�����C�u�����Ƃ��ăC���X�g�[������΂������API���Ăׂ܂��B
 
 ---------------
-以下、オリジナルReadme
+�ȉ��A�I���W�i��Readme
 ---------------
 BMI270 Sensor API
 

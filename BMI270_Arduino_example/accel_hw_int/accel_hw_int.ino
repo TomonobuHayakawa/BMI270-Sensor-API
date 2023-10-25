@@ -1,6 +1,7 @@
 #include "BMI270_Arduino.h"
 
 BMI270Class BMI270;
+bool status = false;
 
 /* Other functions */
 int8_t configure_sensor(struct bmi2_dev *dev);
@@ -11,19 +12,29 @@ void print_rslt(int8_t rslt);
 int8_t configure_sensor()
 {
   int8_t rslt;
-  uint8_t sens_list[2] = { BMI2_ACCEL, BMI2_GYRO };
+  uint8_t sens_list[1] = { BMI2_ACCEL };
 
-  struct bmi2_sens_config config[2];
+  struct bmi2_int_pin_cfg int_pin_cfg;
+  int_pin_cfg.lvl = BMI2_INT_ACTIVE_HIGH;
+  int_pin_cfg.od = BMI2_INT_PUSH_PULL;
+  int_pin_cfg.output_en = BMI2_INT_OUTPUT_ENABLE;
+  int_pin_cfg.input_en = BMI2_INT_INPUT_DISABLE;
+
+  /* Set interrupt configurations. */
+  rslt = BMI270.set_int_pin_config(BMI2_INT1, &int_pin_cfg);
+  if (rslt != BMI2_OK) return rslt;
+
+  struct bmi2_sens_config config;
 
   /* Configure the type of feature. */
-  config[0].type = BMI2_ACCEL;
+  config.type = BMI2_ACCEL;
 
   /* NOTE: The user can change the following configuration parameters according to their requirement. */
   /* Set Output Data Rate */
-  config[0].cfg.acc.odr = BMI2_ACC_ODR_200HZ;
+  config.cfg.acc.odr = BMI2_ACC_ODR_200HZ;
 
   /* Gravity range of the sensor (+/- 2G, 4G, 8G, 16G). */
-  config[0].cfg.acc.range = BMI2_ACC_RANGE_2G;
+  config.cfg.acc.range = BMI2_ACC_RANGE_2G;
 
   /* The bandwidth parameter is used to configure the number of sensor samples that are averaged
    * if it is set to 2, then 2^(bandwidth parameter) samples
@@ -32,7 +43,7 @@ int8_t configure_sensor()
    * Note2 : A higher number of averaged samples will result in a lower noise level of the signal, but
    * this has an adverse effect on the power consumed.
    */
-  config[0].cfg.acc.bwp = BMI2_ACC_NORMAL_AVG4;
+  config.cfg.acc.bwp = BMI2_ACC_NORMAL_AVG4;
 
   /* Enable the filter performance mode where averaging of samples
    * will be done based on above set bandwidth and ODR.
@@ -41,44 +52,30 @@ int8_t configure_sensor()
    *  1 -> High performance mode(Default)
    * For more info refer datasheet.
    */
-  config[0].cfg.acc.filter_perf = BMI2_PERF_OPT_MODE;
-
-  /* Configure the type of feature. */
-  config[1].type = BMI2_GYRO;
-
-  /* The user can change the following configuration parameters according to their requirement. */
-  /* Set Output Data Rate */
-  config[1].cfg.gyr.odr = BMI2_GYR_ODR_100HZ;
-
-  /* Gyroscope Angular Rate Measurement Range.By default the range is 2000dps. */
-  config[1].cfg.gyr.range = BMI2_GYR_RANGE_2000;
-
-  /* Gyroscope bandwidth parameters. By default the gyro bandwidth is in normal mode. */
-  config[1].cfg.gyr.bwp = BMI2_GYR_NORMAL_MODE;
-
-  /* Enable/Disable the noise performance mode for precision yaw rate sensing
-   * There are two modes
-   *  0 -> Ultra low power mode(Default)
-   *  1 -> High performance mode
-   */
-  config[1].cfg.gyr.noise_perf = BMI2_POWER_OPT_MODE;
-
-  /* Enable/Disable the filter performance mode where averaging of samples
-   * will be done based on above set bandwidth and ODR.
-   * There are two modes
-   *  0 -> Ultra low power mode
-   *  1 -> High performance mode(Default)
-   */
-  config[1].cfg.gyr.filter_perf = BMI2_PERF_OPT_MODE;
+  config.cfg.acc.filter_perf = BMI2_PERF_OPT_MODE;
 
   /* Set the accel configurations. */
-  rslt = BMI270.set_sensor_config(config, 2);
+  rslt = BMI270.set_sensor_config(&config, 1);
   if (rslt != BMI2_OK) return rslt;
 
-  rslt = BMI270.sensor_enable(sens_list, 2);
+  /* Map data ready interrupt to interrupt pin. */
+  rslt = BMI270.map_data_int(BMI2_DRDY_INT, BMI2_INT1);
+  if (rslt != BMI2_OK) return rslt;
+
+  rslt = BMI270.sensor_enable(sens_list, 1);
   if (rslt != BMI2_OK) return rslt;
 
   return rslt;
+}
+
+/*!
+ * @brief This internal API is used to set the interrupt status
+ */
+static void interrupt_callback(uint32_t param1, uint32_t param2)
+{
+  (void)param1;
+  (void)param2;
+  status=true;
 }
 
 void setup(void)
@@ -92,34 +89,27 @@ void setup(void)
 
   rslt = configure_sensor();
   print_rslt(rslt);
+
+  attachInterrupt(22, interrupt_callback, RISING);
+
 }
 
 void loop(void)
 {
-  digitalWrite(LED_BUILTIN, LOW); // Flash the LED to show activity
-
-  struct bmi2_sens_float sensor_data;
-  int8_t rslt = BMI270.bmi2_get_sensor_float(&sensor_data);
-  print_rslt(rslt);
-
-  Serial.print(micros()); // Comment out this line if using the Serial plotter
-  Serial.print(","); // Comment out this line if using the Serial plotter
-  Serial.print(sensor_data.acc.x);
-  Serial.print(",");
-  Serial.print(sensor_data.acc.y);
-  Serial.print(",");
-  Serial.print(sensor_data.acc.z);
-  Serial.print(",");
-  Serial.print(sensor_data.gyr.x);
-  Serial.print(",");
-  Serial.print(sensor_data.gyr.y);
-  Serial.print(",");
-  Serial.print(sensor_data.gyr.z);
-  Serial.println();
-  digitalWrite(LED_BUILTIN, HIGH);
-
-  usleep(10*1000);
-
+  if(status==true){
+    struct bmi2_sens_float sensor_data;
+    int8_t rslt = BMI270.bmi2_get_sensor_float(&sensor_data);
+    print_rslt(rslt);
+    Serial.print(micros()); // Comment out this line if using the Serial plotter
+    Serial.print(","); // Comment out this line if using the Serial plotter
+    Serial.print(sensor_data.acc.x);
+    Serial.print(",");
+    Serial.print(sensor_data.acc.y);
+    Serial.print(",");
+    Serial.print(sensor_data.acc.z);
+    Serial.println();
+    status=false;
+  }
 }
 
 void panic_led_trap(void)

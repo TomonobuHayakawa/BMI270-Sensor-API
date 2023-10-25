@@ -1,6 +1,7 @@
 #include "BMI270_Arduino.h"
 
 BMI270Class BMI270;
+bool status = false;
 
 /* Other functions */
 int8_t configure_sensor(struct bmi2_dev *dev);
@@ -12,6 +13,16 @@ int8_t configure_sensor()
 {
   int8_t rslt;
   uint8_t sens_list[2] = { BMI2_ACCEL, BMI2_GYRO };
+
+  struct bmi2_int_pin_cfg int_pin_cfg;
+  int_pin_cfg.lvl = BMI2_INT_ACTIVE_HIGH;
+  int_pin_cfg.od = BMI2_INT_PUSH_PULL;
+  int_pin_cfg.output_en = BMI2_INT_OUTPUT_ENABLE;
+  int_pin_cfg.input_en = BMI2_INT_INPUT_DISABLE;
+
+  /* Set interrupt configurations. */
+  rslt = BMI270.set_int_pin_config(BMI2_INT1, &int_pin_cfg);
+  if (rslt != BMI2_OK) return rslt;
 
   struct bmi2_sens_config config[2];
 
@@ -75,10 +86,24 @@ int8_t configure_sensor()
   rslt = BMI270.set_sensor_config(config, 2);
   if (rslt != BMI2_OK) return rslt;
 
+  /* Map data ready interrupt to interrupt pin. */
+  rslt = BMI270.map_data_int(BMI2_DRDY_INT, BMI2_INT1);
+  if (rslt != BMI2_OK) return rslt;
+
   rslt = BMI270.sensor_enable(sens_list, 2);
   if (rslt != BMI2_OK) return rslt;
 
   return rslt;
+}
+
+/*!
+ * @brief This internal API is used to set the interrupt status
+ */
+static void interrupt_callback(uint32_t param1, uint32_t param2)
+{
+  (void)param1;
+  (void)param2;
+  status=true;
 }
 
 void setup(void)
@@ -92,34 +117,34 @@ void setup(void)
 
   rslt = configure_sensor();
   print_rslt(rslt);
+
+  attachInterrupt(22, interrupt_callback, RISING);
+
 }
 
 void loop(void)
 {
-  digitalWrite(LED_BUILTIN, LOW); // Flash the LED to show activity
+  if(status==true){
+    struct bmi2_sens_float sensor_data;
+    int8_t rslt = BMI270.bmi2_get_sensor_float(&sensor_data);
+    print_rslt(rslt);
 
-  struct bmi2_sens_float sensor_data;
-  int8_t rslt = BMI270.bmi2_get_sensor_float(&sensor_data);
-  print_rslt(rslt);
-
-  Serial.print(micros()); // Comment out this line if using the Serial plotter
-  Serial.print(","); // Comment out this line if using the Serial plotter
-  Serial.print(sensor_data.acc.x);
-  Serial.print(",");
-  Serial.print(sensor_data.acc.y);
-  Serial.print(",");
-  Serial.print(sensor_data.acc.z);
-  Serial.print(",");
-  Serial.print(sensor_data.gyr.x);
-  Serial.print(",");
-  Serial.print(sensor_data.gyr.y);
-  Serial.print(",");
-  Serial.print(sensor_data.gyr.z);
-  Serial.println();
-  digitalWrite(LED_BUILTIN, HIGH);
-
-  usleep(10*1000);
-
+    Serial.print(micros()); // Comment out this line if using the Serial plotter
+    Serial.print(","); // Comment out this line if using the Serial plotter
+    Serial.print(sensor_data.acc.x);
+    Serial.print(",");
+    Serial.print(sensor_data.acc.y);
+    Serial.print(",");
+    Serial.print(sensor_data.acc.z);
+    Serial.print(",");
+    Serial.print(sensor_data.gyr.x);
+    Serial.print(",");
+    Serial.print(sensor_data.gyr.y);
+    Serial.print(",");
+    Serial.print(sensor_data.gyr.z);
+    Serial.println();
+    status=false;
+  }
 }
 
 void panic_led_trap(void)

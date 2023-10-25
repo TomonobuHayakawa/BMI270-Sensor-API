@@ -307,6 +307,36 @@ int8_t map_feat_int(const struct bmi2_sens_int_config *sens_int, uint8_t n_sens)
 
 int8_t map_data_int(uint8_t data_int, enum bmi2_hw_int_pin int_pin);
 
+/*!
+ * @details This API sets:
+ *        1) The input output configuration of the selected interrupt pin:
+ *           INT1 or INT2.
+ *        2) The interrupt mode: permanently latched or non-latched.
+ *
+ * @param[in] pin_type      : BMI2_INT1 or BMI2_INT2 or BMI2_BOTH
+ * @param[in] pin_cfg       : Structure instance of bmi2_int_pin_cfg.
+ * @param[in] dev           : Structure instance of bmi2_dev.
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+  int8_t set_int_pin_config(uint8_t pin_type, bmi2_int_pin_cfg* pin_cfg);
+
+/*!
+ * @details This API gets:
+ *        1) The input output configuration of the selected interrupt pin:
+ *           INT1 or INT2.
+ *        2) The interrupt mode: permanently latched or non-latched.
+ *
+ * @param[in,out] config  : Structure instance of bmi2_int_pin_config.
+ *
+ * @return Result of API execution status
+ * @retval 0 -> Success
+ * @retval < 0 -> Fail
+ */
+  int8_t get_int_pin_config(bmi2_int_pin_config* config);
+
 private:
 
   struct bmi2_dev bmi2;

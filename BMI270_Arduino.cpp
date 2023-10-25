@@ -9,8 +9,10 @@
 
 extern "C"{
 
-int8_t bmi2_spi_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *data, uint16_t len)
+int8_t bmi2_spi_read(uint8_t reg_addr, uint8_t *data, uint16_t len, void *intf_ptr)
 {
+   uint8_t dev_id = *(uint8_t*)intf_ptr;
+
   if ((data == NULL) || (len == 0))
     return BMI2_E_NULL_PTR;
   digitalWrite(dev_id, LOW);
@@ -23,8 +25,10 @@ int8_t bmi2_spi_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *data, uint16_t l
   return BMI2_OK;
 }
 
-int8_t bmi2_spi_write(uint8_t dev_id, uint8_t reg_addr, const uint8_t *data, uint16_t len)
+int8_t bmi2_spi_write(uint8_t reg_addr, const uint8_t *data, uint16_t len, void *intf_ptr)
 {
+   uint8_t dev_id = *(uint8_t*)intf_ptr;
+
   if ((data == NULL) || (len == 0))
     return BMI2_E_NULL_PTR;
   digitalWrite(dev_id, LOW);
@@ -35,8 +39,10 @@ int8_t bmi2_spi_write(uint8_t dev_id, uint8_t reg_addr, const uint8_t *data, uin
   return BMI2_OK;
 }
 
-int8_t bmi2_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *data, uint16_t len)
+int8_t bmi2_i2c_read(uint8_t reg_addr, uint8_t *data, uint16_t len, void *intf_ptr)
 {
+   uint8_t dev_id = *(uint8_t*)intf_ptr;
+
   if ((data == NULL) || (len == 0) || (len > 32)) {
     return BMI2_E_NULL_PTR;
   }
@@ -58,9 +64,10 @@ int8_t bmi2_i2c_read(uint8_t dev_id, uint8_t reg_addr, uint8_t *data, uint16_t l
   return BMI2_OK;
 }
 
-int8_t bmi2_i2c_write(uint8_t dev_id, uint8_t reg_addr, const uint8_t *data, uint16_t len)
+int8_t bmi2_i2c_write(uint8_t reg_addr, const uint8_t *data, uint16_t len, void *intf_ptr)
 {
-    
+   uint8_t dev_id = *(uint8_t*)intf_ptr;
+
   if ((data == NULL) || (len == 0) || (len > 32)) {
     return BMI2_E_NULL_PTR;
   }
@@ -103,6 +110,7 @@ int8_t BMI270Class::begin(BMI270Mode mode,uint8_t addr)
     bmi2.intf = BMI2_I2C_INTF;
     bmi2.read_write_len = 30; // Limitation of the Wire library
     bmi2.config_file_ptr = NULL; // Use the default BMI270 config file
+  	bmi2.intf_ptr = &bmi2.dev_id;
 
   }else{
 
@@ -157,6 +165,34 @@ int8_t BMI270Class::set_sensor_config(struct bmi2_sens_config *config, uint8_t n
 
   return bmi270_set_sensor_config(config, n_sens, &bmi2);
 
+}
+
+int8_t BMI270Class::set_int_pin_config(uint8_t pin_type, bmi2_int_pin_cfg* pin_cfg)
+{
+
+  bmi2_int_pin_config config;
+  int8_t rslt = bmi2_get_int_pin_config(&config,&bmi2);
+  if (rslt != BMI2_OK) return rslt;
+
+  config.pin_type  = pin_type;
+  config.int_latch = BMI2_INT_NON_LATCH;
+
+  if(pin_type == BMI2_INT1){
+    config.pin_cfg[0]   = *pin_cfg;
+  }else if(pin_type == BMI2_INT2){
+    config.pin_cfg[1]   = *pin_cfg;
+  }else{
+    config.pin_cfg[0]   = *pin_cfg;
+    config.pin_cfg[1]   = *pin_cfg;
+  }
+
+  return bmi2_set_int_pin_config(&config, &bmi2);
+
+}
+
+int8_t BMI270Class::get_int_pin_config(bmi2_int_pin_config* config)
+{
+  return bmi2_get_int_pin_config(config, &bmi2);
 }
 
 int8_t BMI270Class::get_sensor_config(struct bmi2_sens_config *sens_cfg, uint8_t n_sens)

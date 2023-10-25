@@ -13,14 +13,6 @@ int8_t configure_sensor()
   int8_t rslt;
   uint8_t sens_list[1] = { BMI2_GYRO };
 
-  struct bmi2_int_pin_config int_pin_cfg;
-  int_pin_cfg.pin_type = BMI2_INT1;
-  int_pin_cfg.int_latch = BMI2_INT_NON_LATCH;
-  int_pin_cfg.pin_cfg[0].lvl = BMI2_INT_ACTIVE_HIGH;
-  int_pin_cfg.pin_cfg[0].od = BMI2_INT_PUSH_PULL;
-  int_pin_cfg.pin_cfg[0].output_en = BMI2_INT_OUTPUT_ENABLE;
-  int_pin_cfg.pin_cfg[0].input_en = BMI2_INT_INPUT_DISABLE;
-
   struct bmi2_sens_config config;
 
   /* Configure the type of feature. */
@@ -53,10 +45,6 @@ int8_t configure_sensor()
 
   /* Set the accel configurations. */
   rslt = BMI270.set_sensor_config(&config, 1);
-  if (rslt != BMI2_OK) return rslt;
-
-  /* Map data ready interrupt to interrupt pin. */
-  rslt = BMI270.map_data_int(BMI2_DRDY_INT, BMI2_INT1);
   if (rslt != BMI2_OK) return rslt;
 
   rslt = BMI270.sensor_enable(sens_list, 1);

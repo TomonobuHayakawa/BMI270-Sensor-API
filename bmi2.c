@@ -1977,7 +1977,7 @@ int8_t bmi2_get_regs(uint8_t reg_addr, uint8_t *data, uint16_t len, struct bmi2_
             reg_addr = (reg_addr | BMI2_SPI_RD_MASK);
         }
 
-        dev->intf_rslt = dev->read(dev->dev_id, reg_addr, temp_buf, (len + dev->dummy_byte));
+        dev->intf_rslt = dev->read(reg_addr, temp_buf, (len + dev->dummy_byte), dev->intf_ptr);
 
         if (dev->aps_status == BMI2_ENABLE)
         {

@@ -271,9 +271,10 @@ float BMI270Class::lsb_to_mps2(int16_t val)
 
 float BMI270Class::lsb_to_dps(int16_t val)
 {
-    float half_scale = ((float)(1 << bmi2.resolution) / 2.0f);
-
-    return (gyr_range / ((half_scale))) * (val);
+    double power = 2;
+ 
+    float half_scale = (float)((pow((double)power, (double) bmi2.resolution) / 2.0f));
+ 
+    return (gyr_range / (half_scale)) * (val);
 }
-
 

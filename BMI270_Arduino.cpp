@@ -264,17 +264,13 @@ int8_t BMI270Class::map_data_int(uint8_t data_int, enum bmi2_hw_int_pin int_pin)
 
 float BMI270Class::lsb_to_mps2(int16_t val)
 {
-    float half_scale = ((float)(1 << bmi2.resolution) / 2.0f);
+  float half_scale = ((float)(1 << bmi2.resolution) / 2.0f);
 
-    return (GRAVITY_EARTH * val * acc_range) / half_scale;
+  return (GRAVITY_EARTH * val * acc_range) / half_scale;
 }
 
 float BMI270Class::lsb_to_dps(int16_t val)
 {
-    double power = 2;
- 
-    float half_scale = (float)((pow((double)power, (double) bmi2.resolution) / 2.0f));
- 
-    return (gyr_range / (half_scale)) * (val);
+  return ((float)val*(gyr_range / 32768.0));
 }
 

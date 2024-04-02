@@ -340,8 +340,8 @@ int8_t map_data_int(uint8_t data_int, enum bmi2_hw_int_pin int_pin);
 private:
 
   struct bmi2_dev bmi2;
-  uint8_t         acc_range;
-  uint8_t         gyr_range;
+  uint8_t          acc_range;
+  uint16_t         gyr_range;
 
 /*!
  * @brief This function converts lsb to meter per second squared for 16 bit accelerometer at
